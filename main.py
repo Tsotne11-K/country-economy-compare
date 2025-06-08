@@ -51,7 +51,7 @@ class EconomyApp(QtWidgets.QMainWindow):
         c1 = self.get_english_name(self.ui.comboBox_country1.currentText())
         c2 = self.get_english_name(self.ui.comboBox_country2.currentText())
 
-        # User amount from QLineEdit
+    
         amount_text = self.ui.lineEdit_amount.text()
         try:
             amount = float(amount_text)
@@ -59,7 +59,7 @@ class EconomyApp(QtWidgets.QMainWindow):
             self.ui.textEdit_result.setText("გთხოვთ შეიყვანოთ სავალდებულო თანხა სწორ ფორმატში.")
             return
 
-        # კონვერტაცია და შედარება
+       
         converted_amount, currency = self.logic.convert_amount(amount, c1, c2)
         comparison = self.logic.compare(c1, c2)
 
