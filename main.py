@@ -1,8 +1,8 @@
 
-import sys
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore
 from economy_ui import Ui_MainWindow
 from logic import CountryEconomy
+import sys
 
 class EconomyApp(QtWidgets.QMainWindow):
     def __init__(self):
@@ -11,7 +11,6 @@ class EconomyApp(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.logic = CountryEconomy()
-
         self.language_index = 0
         self.languages = ["English", "ქართული", "Français", "Italiano", "Español"]
         self.country_translations = {
@@ -21,17 +20,79 @@ class EconomyApp(QtWidgets.QMainWindow):
             "Italiano": ["Georgia", "Francia", "Italia", "Spagna"],
             "Español": ["Georgia", "Francia", "Italia", "España"]
         }
-        self.current_lang = "English"
 
-        self.ui.pushButton_compare.clicked.connect(self.compare_countries)
-        self.ui.pushButton_language.clicked.connect(self.change_language)
+        self.current_lang = "English"
+        self.update_country_comboboxes()
+        self.setup_styles()
+        self.connect_signals()
 
         self.seconds_inside = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_timer_label)
-        self.timer.start(1000)
+        self.timer.start(1000) 
 
-        self.update_country_comboboxes()
+    def setup_styles(self):
+        self.setStyleSheet("background-color: #f0f0f0;")
+        self.ui.label_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #333;")
+        self.ui.label_title.setAlignment(QtCore.Qt.AlignCenter)
+
+        combo_style = """
+            QComboBox {
+                background-color: white;
+                border: 1px solid gray;
+                padding: 5px;
+                font-size: 14px;
+            }
+        """
+        self.ui.comboBox_country1.setStyleSheet(combo_style)
+        self.ui.comboBox_country2.setStyleSheet(combo_style)
+
+        self.ui.pushButton_compare.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                font-size: 16px;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        self.ui.pushButton_compare.setFixedSize(160, 40)
+
+        self.ui.pushButton_language.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                color: white;
+                font-size: 14px;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #1976D2;
+            }
+        """)
+        self.ui.pushButton_language.setFixedSize(160, 40)
+
+        self.ui.textEdit_result.setStyleSheet("""
+            QTextEdit {
+                background-color: #ffffff;
+                border: 1px solid #ccc;
+                font-size: 14px;
+                padding: 10px;
+            }
+        """)
+
+        if not hasattr(self.ui, "label_timer"):
+            self.ui.label_timer = QtWidgets.QLabel(self)
+            self.ui.label_timer.setGeometry(220, 360, 160, 30)
+            self.ui.label_timer.setStyleSheet("font-size: 14px; color: #555;")
+            self.ui.label_timer.setAlignment(QtCore.Qt.AlignCenter)
+
+    def connect_signals(self):
+        self.ui.pushButton_compare.clicked.connect(self.compare_countries)
+        self.ui.pushButton_language.clicked.connect(self.change_language)
 
     def update_country_comboboxes(self):
         self.ui.comboBox_country1.clear()
@@ -41,8 +102,8 @@ class EconomyApp(QtWidgets.QMainWindow):
         self.ui.comboBox_country2.addItems(countries)
 
     def get_english_name(self, name):
-        for lang_list in self.country_translations.values():
-            for i, val in enumerate(lang_list):
+        for lang in self.country_translations.values():
+            for i, val in enumerate(lang):
                 if val == name:
                     return self.country_translations["English"][i]
         return name
@@ -50,24 +111,8 @@ class EconomyApp(QtWidgets.QMainWindow):
     def compare_countries(self):
         c1 = self.get_english_name(self.ui.comboBox_country1.currentText())
         c2 = self.get_english_name(self.ui.comboBox_country2.currentText())
-
-    
-        amount_text = self.ui.lineEdit_amount.text()
-        try:
-            amount = float(amount_text)
-        except ValueError:
-            self.ui.textEdit_result.setText("გთხოვთ შეიყვანოთ სავალდებულო თანხა სწორ ფორმატში.")
-            return
-
-       
-        converted_amount, currency = self.logic.convert_amount(amount, c1, c2)
-        comparison = self.logic.compare(c1, c2)
-
-        result_text = (
-            f"{amount} {self.logic.currency_names[c1]} ტოლია ≈ {converted_amount} {currency} \n\n"
-            f"{comparison}"
-        )
-        self.ui.textEdit_result.setText(result_text)
+        result = self.logic.compare(c1, c2)
+        self.ui.textEdit_result.setText(result)
 
     def change_language(self):
         self.language_index = (self.language_index + 1) % len(self.languages)
